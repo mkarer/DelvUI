@@ -86,11 +86,11 @@ namespace DelvUI.Interface.GeneralElements
                     {
                         ImGui.SetCursorPos(startPos);
                         ImGui.Image(LastUsedCast!.IconTexture!.ImGuiHandle, iconSize);
-                    }
 
-                    if (Config.DrawBorder)
-                    {
-                        drawList.AddRect(startPos, startPos + iconSize, Config.BorderColor.Base, 0, ImDrawFlags.None, Config.BorderThickness);
+                        if (Config.DrawBorder)
+                        {
+                            drawList.AddRect(startPos, startPos + iconSize, Config.BorderColor.Base, 0, ImDrawFlags.None, Config.BorderThickness);
+                        }
                     }
                 });
             }
