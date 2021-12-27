@@ -41,7 +41,7 @@ namespace DelvUI.Helpers
                 name = ValidateName(actor, name);
                 return actor?.ObjectKind == ObjectKind.Player ?
                     name.FirstName().CheckForUpperCase() :
-                    name.Truncate(15).CheckForUpperCase();
+                    name.Replace("'s Avatar", "").Truncate(15).CheckForUpperCase();
             },
 
             ["[name:first-npclong]"] = (actor, name) =>
@@ -49,7 +49,7 @@ namespace DelvUI.Helpers
                 name = ValidateName(actor, name);
                 return actor?.ObjectKind == ObjectKind.Player ?
                     name.FirstName().CheckForUpperCase() :
-                    name.Truncate(15).CheckForUpperCase();
+                    name.Replace("'s Avatar", "").Truncate(15).CheckForUpperCase();
             },
 
             ["[name:first-npcfull]"] = (actor, name) =>
@@ -57,7 +57,7 @@ namespace DelvUI.Helpers
                 name = ValidateName(actor, name);
                 return actor?.ObjectKind == ObjectKind.Player ?
                     name.FirstName().CheckForUpperCase() :
-                    name.CheckForUpperCase();
+                    name.Replace("'s Avatar", "").CheckForUpperCase();
             },
 
             ["[name:last]"] = (actor, name) => ValidateName(actor, name).LastName().CheckForUpperCase(),
@@ -123,7 +123,15 @@ namespace DelvUI.Helpers
 
             ["[health:deficit]"] = (currentHp, maxHp) => currentHp == maxHp ? "0" : $"-{maxHp - currentHp}",
 
+            ["[health:deficit-empty]"] = (currentHp, maxHp) => currentHp == maxHp ? "" : $"-{maxHp - currentHp}",
+
+            ["[health:deficit-empty90]"] = (currentHp, maxHp) => currentHp == maxHp || (100f * currentHp / Math.Max(1, maxHp)) > 90 ? "" : $"-{maxHp - currentHp}",
+
             ["[health:deficit-short]"] = (currentHp, maxHp) => currentHp == maxHp ? "0" : $"-{(maxHp - currentHp).KiloFormat()}",
+
+            ["[health:deficit-short-empty]"] = (currentHp, maxHp) => currentHp == maxHp ? "" : $"-{(maxHp - currentHp).KiloFormat()}",
+
+            ["[health:deficit-short-empty90]"] = (currentHp, maxHp) => currentHp == maxHp || (100f * currentHp / Math.Max(1, maxHp)) > 90 ? "" : $"-{(maxHp - currentHp).KiloFormat()}",
             #endregion
         };
 
