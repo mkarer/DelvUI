@@ -2,6 +2,7 @@
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using System.Numerics;
+using System.Linq;
 
 namespace DelvUI.Interface.Jobs
 {
@@ -20,7 +21,7 @@ namespace DelvUI.Interface.Jobs
 
         public override void DrawChildren(Vector2 origin)
         {
-            if (Player == null || !_config.Enabled)
+            if (Player == null || !_config.Enabled || Player.StatusList.FirstOrDefault(o => o.StatusId is 1534) != null)
             {
                 return;
             }
