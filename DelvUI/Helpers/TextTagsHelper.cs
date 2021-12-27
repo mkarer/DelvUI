@@ -4,12 +4,21 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DelvUI.Helpers
 {
     public static class TextTagsHelper
     {
+        private static readonly string tagPattern = @"\[" +
+            @"(?<prefix>([^>\]]*?)>)?" + // Prefix
+            @"([^<\]]*?)" + // Tag
+            @"(?<suffix><([^\]]*))?" + // Suffix
+            @"\]";
+
+        private static readonly Regex tagRegex = new(tagPattern, RegexOptions.Compiled);
+
         public static void Initialize()
         {
             foreach (string key in HealthTextTags.Keys)
@@ -26,17 +35,17 @@ namespace DelvUI.Helpers
         public static Dictionary<string, Func<GameObject?, string?, string>> TextTags = new Dictionary<string, Func<GameObject?, string?, string>>()
         {
             #region name
-            ["[name]"] = (actor, name) => ValidateName(actor, name).CheckForUpperCase(),
+            ["name"] = (actor, name) => ValidateName(actor, name).CheckForUpperCase(),
 
-            ["[name:first]"] = (actor, name) => ValidateName(actor, name).FirstName().CheckForUpperCase(),
+            ["name:first"] = (actor, name) => ValidateName(actor, name).FirstName().CheckForUpperCase(),
 
-            ["[name:first-initial]"] = (actor, name) =>
+            ["name:first-initial"] = (actor, name) =>
             {
                 name = ValidateName(actor, name).FirstName().CheckForUpperCase();
                 return name.Length > 0 ? name[..1] : "";
             },
 
-            ["[name:first-npcmedium]"] = (actor, name) =>
+            ["name:first-npcmedium"] = (actor, name) =>
             {
                 name = ValidateName(actor, name);
                 return actor?.ObjectKind == ObjectKind.Player ?
@@ -44,7 +53,7 @@ namespace DelvUI.Helpers
                     name.Replace("'s Avatar", "").Truncate(15).CheckForUpperCase();
             },
 
-            ["[name:first-npclong]"] = (actor, name) =>
+            ["name:first-npclong"] = (actor, name) =>
             {
                 name = ValidateName(actor, name);
                 return actor?.ObjectKind == ObjectKind.Player ?
@@ -52,7 +61,7 @@ namespace DelvUI.Helpers
                     name.Replace("'s Avatar", "").Truncate(15).CheckForUpperCase();
             },
 
-            ["[name:first-npcfull]"] = (actor, name) =>
+            ["name:first-npcfull"] = (actor, name) =>
             {
                 name = ValidateName(actor, name);
                 return actor?.ObjectKind == ObjectKind.Player ?
@@ -60,122 +69,122 @@ namespace DelvUI.Helpers
                     name.Replace("'s Avatar", "").CheckForUpperCase();
             },
 
-            ["[name:last]"] = (actor, name) => ValidateName(actor, name).LastName().CheckForUpperCase(),
+            ["name:last"] = (actor, name) => ValidateName(actor, name).LastName().CheckForUpperCase(),
 
-            ["[name:last-initial]"] = (actor, name) =>
+            ["name:last-initial"] = (actor, name) =>
             {
                 name = ValidateName(actor, name).LastName().CheckForUpperCase();
                 return name.Length > 0 ? name[..1] : "";
             },
 
-            ["[name:initials]"] = (actor, name) => ValidateName(actor, name).Initials().CheckForUpperCase(),
+            ["name:initials"] = (actor, name) => ValidateName(actor, name).Initials().CheckForUpperCase(),
 
-            ["[name:abbreviate]"] = (actor, name) => ValidateName(actor, name).Abbreviate().CheckForUpperCase(),
+            ["name:abbreviate"] = (actor, name) => ValidateName(actor, name).Abbreviate().CheckForUpperCase(),
 
-            ["[name:veryshort]"] = (actor, name) => ValidateName(actor, name).Truncate(5).CheckForUpperCase(),
+            ["name:veryshort"] = (actor, name) => ValidateName(actor, name).Truncate(5).CheckForUpperCase(),
 
-            ["[name:short]"] = (actor, name) => ValidateName(actor, name).Truncate(10).CheckForUpperCase(),
+            ["name:short"] = (actor, name) => ValidateName(actor, name).Truncate(10).CheckForUpperCase(),
 
-            ["[name:medium]"] = (actor, name) => ValidateName(actor, name).Truncate(15).CheckForUpperCase(),
+            ["name:medium"] = (actor, name) => ValidateName(actor, name).Truncate(15).CheckForUpperCase(),
 
-            ["[name:long]"] = (actor, name) => ValidateName(actor, name).Truncate(20).CheckForUpperCase(),
+            ["name:long"] = (actor, name) => ValidateName(actor, name).Truncate(20).CheckForUpperCase(),
             #endregion
 
             #region experience
-            ["[exp:current]"] = (actor, name) => ExperienceHelper.Instance.CurrentExp.ToString("N0", CultureInfo.InvariantCulture),
+            ["exp:current"] = (actor, name) => ExperienceHelper.Instance.CurrentExp.ToString("N0", CultureInfo.InvariantCulture),
 
-            ["[exp:current-short]"] = (actor, name) => ExperienceHelper.Instance.CurrentExp.KiloFormat(),
+            ["exp:current-short"] = (actor, name) => ExperienceHelper.Instance.CurrentExp.KiloFormat(),
 
-            ["[exp:required]"] = (actor, name) => ExperienceHelper.Instance.RequiredExp.ToString("N0", CultureInfo.InvariantCulture),
+            ["exp:required"] = (actor, name) => ExperienceHelper.Instance.RequiredExp.ToString("N0", CultureInfo.InvariantCulture),
 
-            ["[exp:required-short]"] = (actor, name) => ExperienceHelper.Instance.RequiredExp.KiloFormat(),
+            ["exp:required-short"] = (actor, name) => ExperienceHelper.Instance.RequiredExp.KiloFormat(),
 
-            ["[exp:rested]"] = (actor, name) => ExperienceHelper.Instance.RestedExp.ToString("N0", CultureInfo.InvariantCulture),
+            ["exp:rested"] = (actor, name) => ExperienceHelper.Instance.RestedExp.ToString("N0", CultureInfo.InvariantCulture),
 
-            ["[exp:rested-short]"] = (actor, name) => ExperienceHelper.Instance.RestedExp.KiloFormat(),
+            ["exp:rested-short"] = (actor, name) => ExperienceHelper.Instance.RestedExp.KiloFormat(),
 
-            ["[exp:percent]"] = (actor, name) => ExperienceHelper.Instance.PercentExp.ToString("N1", CultureInfo.InvariantCulture),
+            ["exp:percent"] = (actor, name) => ExperienceHelper.Instance.PercentExp.ToString("N1", CultureInfo.InvariantCulture),
             #endregion
         };
 
         public static Dictionary<string, Func<uint, uint, string>> HealthTextTags = new Dictionary<string, Func<uint, uint, string>>()
         {
             #region health
-            ["[health:current]"] = (currentHp, maxHp) => currentHp.ToString(),
+            ["health:current"] = (currentHp, maxHp) => currentHp.ToString(),
 
-            ["[health:current-short]"] = (currentHp, maxHp) => currentHp.KiloFormat(),
+            ["health:current-short"] = (currentHp, maxHp) => currentHp.KiloFormat(),
 
-            ["[health:current-percent]"] = (currentHp, maxHp) => currentHp == maxHp ? currentHp.ToString() : (100f * currentHp / Math.Max(1, maxHp)).ToString("N0"),
+            ["health:current-percent"] = (currentHp, maxHp) => currentHp == maxHp ? currentHp.ToString() : (100f * currentHp / Math.Max(1, maxHp)).ToString("N0"),
 
-            ["[health:current-percent-short]"] = (currentHp, maxHp) => currentHp == maxHp ? currentHp.KiloFormat() : (100f * currentHp / Math.Max(1, maxHp)).ToString("N0"),
+            ["health:current-percent-short"] = (currentHp, maxHp) => currentHp == maxHp ? currentHp.KiloFormat() : (100f * currentHp / Math.Max(1, maxHp)).ToString("N0"),
 
-            ["[health:current-max]"] = (currentHp, maxHp) => $"{currentHp}  |  {maxHp}",
+            ["health:current-max"] = (currentHp, maxHp) => $"{currentHp}  |  {maxHp}",
 
-            ["[health:current-max-short]"] = (currentHp, maxHp) => $"{currentHp.KiloFormat()}  |  {maxHp.KiloFormat()}",
+            ["health:current-max-short"] = (currentHp, maxHp) => $"{currentHp.KiloFormat()}  |  {maxHp.KiloFormat()}",
 
-            ["[health:max]"] = (currentHp, maxHp) => maxHp.ToString(),
+            ["health:max"] = (currentHp, maxHp) => maxHp.ToString(),
 
-            ["[health:max-short]"] = (currentHp, maxHp) => maxHp.KiloFormat(),
+            ["health:max-short"] = (currentHp, maxHp) => maxHp.KiloFormat(),
 
-            ["[health:percent]"] = (currentHp, maxHp) => (100f * currentHp / Math.Max(1, maxHp)).ToString("N0"),
+            ["health:percent"] = (currentHp, maxHp) => (100f * currentHp / Math.Max(1, maxHp)).ToString("N0"),
 
-            ["[health:percent-decimal]"] = (currentHp, maxHp) => FormattableString.Invariant($"{100f * currentHp / Math.Max(1f, maxHp):##0.#}"),
+            ["health:percent-decimal"] = (currentHp, maxHp) => FormattableString.Invariant($"{100f * currentHp / Math.Max(1f, maxHp):##0.#}"),
 
-            ["[health:deficit]"] = (currentHp, maxHp) => currentHp == maxHp ? "0" : $"-{maxHp - currentHp}",
+            ["health:deficit"] = (currentHp, maxHp) => currentHp == maxHp ? "0" : $"-{maxHp - currentHp}",
 
-            ["[health:deficit-empty]"] = (currentHp, maxHp) => currentHp == maxHp ? "" : $"-{maxHp - currentHp}",
+            ["health:deficit-empty"] = (currentHp, maxHp) => currentHp == maxHp ? "" : $"-{maxHp - currentHp}",
 
-            ["[health:deficit-empty90]"] = (currentHp, maxHp) => currentHp == maxHp || (100f * currentHp / Math.Max(1, maxHp)) > 90 ? "" : $"-{maxHp - currentHp}",
+            ["health:deficit-empty90"] = (currentHp, maxHp) => currentHp == maxHp || (100f * currentHp / Math.Max(1, maxHp)) > 90 ? "" : $"-{maxHp - currentHp}",
 
-            ["[health:deficit-short]"] = (currentHp, maxHp) => currentHp == maxHp ? "0" : $"-{(maxHp - currentHp).KiloFormat()}",
+            ["health:deficit-short"] = (currentHp, maxHp) => currentHp == maxHp ? "0" : $"-{(maxHp - currentHp).KiloFormat()}",
 
-            ["[health:deficit-short-empty]"] = (currentHp, maxHp) => currentHp == maxHp ? "" : $"-{(maxHp - currentHp).KiloFormat()}",
+            ["health:deficit-short-empty"] = (currentHp, maxHp) => currentHp == maxHp ? "" : $"-{(maxHp - currentHp).KiloFormat()}",
 
-            ["[health:deficit-short-empty90]"] = (currentHp, maxHp) => currentHp == maxHp || (100f * currentHp / Math.Max(1, maxHp)) > 90 ? "" : $"-{(maxHp - currentHp).KiloFormat()}",
+            ["health:deficit-short-empty90"] = (currentHp, maxHp) => currentHp == maxHp || (100f * currentHp / Math.Max(1, maxHp)) > 90 ? "" : $"-{(maxHp - currentHp).KiloFormat()}",
             #endregion
         };
 
         public static Dictionary<string, Func<uint, uint, string>> ManaTextTags = new Dictionary<string, Func<uint, uint, string>>()
         {
             #region mana
-            ["[mana:current]"] = (currentMp, maxMp) => currentMp.ToString(),
+            ["mana:current"] = (currentMp, maxMp) => currentMp.ToString(),
 
-            ["[mana:current-short]"] = (currentMp, maxMp) => currentMp.KiloFormat(),
+            ["mana:current-short"] = (currentMp, maxMp) => currentMp.KiloFormat(),
 
-            ["[mana:current-percent]"] = (currentMp, maxMp) => currentMp == maxMp ? currentMp.ToString() : (100f * currentMp / Math.Max(1, maxMp)).ToString("N0"),
+            ["mana:current-percent"] = (currentMp, maxMp) => currentMp == maxMp ? currentMp.ToString() : (100f * currentMp / Math.Max(1, maxMp)).ToString("N0"),
 
-            ["[mana:current-percent-short]"] = (currentMp, maxMp) => currentMp == maxMp ? currentMp.KiloFormat() : (100f * currentMp / Math.Max(1, maxMp)).ToString("N0"),
+            ["mana:current-percent-short"] = (currentMp, maxMp) => currentMp == maxMp ? currentMp.KiloFormat() : (100f * currentMp / Math.Max(1, maxMp)).ToString("N0"),
 
-            ["[mana:current-max]"] = (currentMp, maxMp) => $"{currentMp}  |  {maxMp}",
+            ["mana:current-max"] = (currentMp, maxMp) => $"{currentMp}  |  {maxMp}",
 
-            ["[mana:current-max-short]"] = (currentMp, maxMp) => $"{currentMp.KiloFormat()}  |  {maxMp.KiloFormat()}",
+            ["mana:current-max-short"] = (currentMp, maxMp) => $"{currentMp.KiloFormat()}  |  {maxMp.KiloFormat()}",
 
-            ["[mana:max]"] = (currentMp, maxMp) => maxMp.ToString(),
+            ["mana:max"] = (currentMp, maxMp) => maxMp.ToString(),
 
-            ["[mana:max-short]"] = (currentMp, maxMp) => maxMp.KiloFormat(),
+            ["mana:max-short"] = (currentMp, maxMp) => maxMp.KiloFormat(),
 
-            ["[mana:percent]"] = (currentMp, maxMp) => (100f * currentMp / Math.Max(1, maxMp)).ToString("N0"),
+            ["mana:percent"] = (currentMp, maxMp) => (100f * currentMp / Math.Max(1, maxMp)).ToString("N0"),
 
-            ["[mana:percent-decimal]"] = (currentMp, maxMp) => FormattableString.Invariant($"{100f * currentMp / Math.Max(1, maxMp):##0.#}"),
+            ["mana:percent-decimal"] = (currentMp, maxMp) => FormattableString.Invariant($"{100f * currentMp / Math.Max(1, maxMp):##0.#}"),
 
-            ["[mana:deficit]"] = (currentMp, maxMp) => currentMp == maxMp ? "0" : $"-{currentMp - maxMp}",
+            ["mana:deficit"] = (currentMp, maxMp) => currentMp == maxMp ? "0" : $"-{currentMp - maxMp}",
 
-            ["[mana:deficit-short]"] = (currentMp, maxMp) => currentMp == maxMp ? "0" : $"-{(currentMp - maxMp).KiloFormat()}",
+            ["mana:deficit-short"] = (currentMp, maxMp) => currentMp == maxMp ? "0" : $"-{(currentMp - maxMp).KiloFormat()}",
             #endregion
         };
 
         public static Dictionary<string, Func<Character, string>> CharaTextTags = new Dictionary<string, Func<Character, string>>()
         {
             #region misc
-            ["[distance]"] = (chara) => (chara.YalmDistanceX + 1).ToString(),
+            ["distance"] = (chara) => (chara.YalmDistanceX + 1).ToString(),
 
-            ["[company]"] = (chara) => chara.CompanyTag.ToString(),
+            ["company"] = (chara) => chara.CompanyTag.ToString(),
 
-            ["[level]"] = (chara) => chara.Level > 0 ? chara.Level.ToString() : "-",
+            ["level"] = (chara) => chara.Level > 0 ? chara.Level.ToString() : "-",
 
-            ["[job]"] = (chara) => JobsHelper.JobNames.TryGetValue(chara.ClassJob.Id, out var jobName) ? jobName : "",
+            ["job"] = (chara) => JobsHelper.JobNames.TryGetValue(chara.ClassJob.Id, out var jobName) ? jobName : "",
             
-            ["[time-till-max-gp]"] = JobsHelper.TimeTillMaxGP,
+            ["time-till-max-gp"] = JobsHelper.TimeTillMaxGP,
             #endregion
         };
 
@@ -213,11 +222,14 @@ namespace DelvUI.Helpers
 
         public static string FormattedText(string text, GameObject? actor, string? name = null, uint? current = null, uint? max = null)
         {
-            MatchCollection matches = Regex.Matches(text, @"\[(.*?)\]");
-            return matches.Aggregate(text, (c, m) =>
+            return tagRegex.Replace(text, m =>
             {
-                string formattedText = ReplaceTagWithString(m.Value, actor, name, current, max);
-                return c.Replace(m.Value, formattedText);
+                string result = ReplaceTagWithString(m.Groups[2].Value, actor, name, current, max);
+                if (result != "")
+                {
+                    return new StringBuilder().Append(m.Groups[1].Value).Append(result).Append(m.Groups[3].Value).ToString();
+                }
+                return "";
             });
         }
 
