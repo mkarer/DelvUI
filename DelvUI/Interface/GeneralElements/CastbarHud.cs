@@ -84,8 +84,7 @@ namespace DelvUI.Interface.GeneralElements
                 {
                     if (validIcon)
                     {
-                        ImGui.SetCursorPos(startPos);
-                        ImGui.Image(LastUsedCast!.IconTexture!.ImGuiHandle, iconSize);
+                        drawList.AddImage(LastUsedCast!.IconTexture!.ImGuiHandle, startPos, startPos + iconSize);
 
                         if (Config.DrawBorder)
                         {
