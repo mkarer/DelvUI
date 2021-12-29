@@ -66,7 +66,9 @@ namespace DelvUI.Interface.GeneralElements
 
             PluginConfigColor fillColor = GetColor();
             Rect background = new Rect(Config.Position, Config.Size, Config.BackgroundColor);
-            Rect progress = BarUtilities.GetFillRect(Config.Position, Config.Size, Config.FillDirection, fillColor, currentCastTime, totalCastTime);
+            Rect progress = iconSize.X > 0 ? 
+                    BarUtilities.GetFillRect(new Vector2(Config.Position.X + iconSize.X, Config.Position.Y), new Vector2(Config.Size.X - iconSize.X, Config.Size.Y), Config.FillDirection, fillColor, currentCastTime, totalCastTime) :
+                    BarUtilities.GetFillRect(Config.Position, Config.Size, Config.FillDirection, fillColor, currentCastTime, totalCastTime);
 
             BarHud bar = new BarHud(Config, Actor);
             bar.SetBackground(background);
