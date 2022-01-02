@@ -89,11 +89,11 @@ namespace DelvUI.Interface.GeneralElements
 
             // icon
             Vector2 startPos = Config.Position + Utils.GetAnchoredPosition(pos, Config.Size, Config.Anchor);
-            if (Config.ShowIcon)
+            if (Config.ShowIcon && validIcon)
             {
                 AddDrawAction(Config.StrataLevel, () =>
                 {
-                    if (validIcon)
+                    DrawHelper.DrawInWindow(ID + "_icon", startPos, Config.Size, false, false, (drawList) =>
                     {
                         drawList.AddImage(LastUsedCast!.IconTexture!.ImGuiHandle, startPos, startPos + iconSize);
 
@@ -101,7 +101,7 @@ namespace DelvUI.Interface.GeneralElements
                         {
                             drawList.AddRect(startPos, startPos + iconSize, Config.BorderColor.Base, 0, ImDrawFlags.None, Config.BorderThickness);
                         }
-                    }
+                    });
                 });
             }
 
