@@ -1,9 +1,31 @@
-# 0.6.1.3
+# 0.6.3.0
 Features:
-- Added Thresholds for Bard Songs with the recommended song rotation (43, 34, 43).  
+- Added setting to Status Effects Lists to disable mouse interactions.
+- Added target border thickness setting to the Enemy List.
+- Added Bard's Radiant Finale as a trackable party cooldown.
+
+Fixes:
+- Fixed Party Frames border color not working.
+- Fixed party members health label not visible on preview mode.
+
+# 0.6.2.1
+- Fixed slide cast being drawn on top of the cast progress.
+
+# 0.6.2.0
+Features:
+- Party Frames layout is now configured with the new Rows and Column settings:
+    + Party Frames are not longer draggable / resizable when the config window is opened.
+    + This is a breaking change in the config. When updating, the Party Frames will likely be in a bad position and with an incorrect layout. Use the Position, Rows and Columns settings to correct it. The actual elements inside the frames should remain exactly the same as before the update.
+- Added Strata Level settings to most UI elements (these allow the user to choose which elements are drawn on top of others).
+- Castbars have been given the option to set a Fill Direction.
+- Castbars now has a Reverse Fill option to use in place of normal Background Color settings.
+- Added more settings to Party Frames health bars so they are more in line with other unit frames.
+- Added "dead" status icon in the Party Frames.
+- Added Thresholds for Bard Songs with the recommended song rotation (43, 34, 43).
 
 Fixes:
 - Fixed Dancer Proc Bars so they can be individually disabled.
+- Fixed Reaper and Sage not appearing in Party Frames on preview mode.
 
 # 0.6.1.2
 Features:
