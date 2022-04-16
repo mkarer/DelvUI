@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using DelvUI.Config;
@@ -19,7 +19,7 @@ namespace DelvUI.Interface.PartyCooldowns
 
         private PartyCooldownsManager()
         {
-            IntPtr funcPtr = Plugin.SigScanner.ScanText("4C 89 44 24 18 53 56 57 41 54 41 57 48 81 EC ?? 00 00 00 8B F9");
+            IntPtr funcPtr = Plugin.SigScanner.ScanText("4C 89 44 24 ?? 55 56 57 41 54 41 55 41 56 48 8D 6C 24");
             OnActionUsedHook = new Hook<OnActionUsedDelegate>(funcPtr, OnActionUsed);
             OnActionUsedHook.Enable();
 
@@ -98,6 +98,8 @@ namespace DelvUI.Interface.PartyCooldowns
         private Dictionary<uint, Dictionary<uint, PartyCooldown>> _cooldownsMap = new Dictionary<uint, Dictionary<uint, PartyCooldown>>();
         public IReadOnlyDictionary<uint, Dictionary<uint, PartyCooldown>> CooldownsMap => _cooldownsMap;
 
+        private Dictionary<uint, double> _technicalStepMap = new Dictionary<uint, double>();
+
         public delegate void PartyCooldownsChangedEventHandler(PartyCooldownsManager sender);
         public event PartyCooldownsChangedEventHandler? CooldownsChangedEvent;
 
@@ -132,10 +134,33 @@ namespace DelvUI.Interface.PartyCooldowns
                 {
                     uint actionID = *((uint*)effect.ToPointer() + 0x2);
 
-                    // check if its an action we track
-                    if (_cooldownsMap[actorId].TryGetValue(actionID, out PartyCooldown? cooldown) && cooldown != null)
+                    // special case for technical step / finish
+                    // we detect when technical step is pressed and save the time
+                    // so we can properly calculate the cooldown once finish is pressed
+                    if (actionID == 16193 || actionID == 16194 || actionID == 16195 || actionID == 16196)
                     {
-                        cooldown.LastTimeUsed = ImGui.GetTime() + 1;
+                        actionID = 16004;
+                    }
+
+                    if (actionID == 15998)
+                    {
+                        _technicalStepMap[actorId] = ImGui.GetTime();
+                    }
+                    else
+                    {
+                        // check if its an action we track
+                        if (_cooldownsMap[actorId].TryGetValue(actionID, out PartyCooldown? cooldown) && cooldown != null)
+                        {
+                            // if its technical finish, we set the cooldown start time to
+                            // the time when step was pressed
+                            if (_technicalStepMap.TryGetValue(actorId, out double stepStartTime) && actionID == 16004)
+                            {
+                                cooldown.OverridenCooldownStartTime = stepStartTime;
+                                _technicalStepMap.Remove(actorId);
+                            }
+
+                            cooldown.LastTimeUsed = ImGui.GetTime() + 1;
+                        }
                     }
                 }
             }

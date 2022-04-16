@@ -17,7 +17,9 @@ namespace DelvUI.Interface.PartyCooldowns
     public enum PartyCooldownsGrowthDirection
     {
         Down = 0,
-        Up
+        Up,
+        Right,
+        Left
     }
 
     [Exportable(false)]
@@ -37,7 +39,7 @@ namespace DelvUI.Interface.PartyCooldowns
         [Order(4)]
         public bool Preview = false;
 
-        [Combo("Growth Direction", "Down", "Up", spacing = true)]
+        [Combo("Sections Growth Direction", "Down", "Up", "Right", "Left", spacing = true)]
         [Order(20)]
         public PartyCooldownsGrowthDirection GrowthDirection = PartyCooldownsGrowthDirection.Down;
 
@@ -156,10 +158,25 @@ namespace DelvUI.Interface.PartyCooldowns
 
             foreach (uint key in DefaultCooldowns.Keys)
             {
-                if (Cooldowns.Any(data => data.ActionId == key)) { continue; }
+                PartyCooldownData? data = Cooldowns.FirstOrDefault(data => data.ActionId == key);
+                PartyCooldownData defaultData = DefaultCooldowns[key];
 
-                Cooldowns.Add(DefaultCooldowns[key]);
-                needsSave = true;
+                if (data == null)
+                {
+                    Cooldowns.Add(defaultData);
+                }
+                else if (data != null && !data.Equals(defaultData))
+                {
+                    data.RequiredLevel = defaultData.RequiredLevel;
+                    data.JobId = defaultData.JobId;
+                    data.JobIds = defaultData.JobIds;
+                    data.Role = defaultData.Role;
+                    data.Roles = defaultData.Roles;
+                    data.CooldownDuration = defaultData.CooldownDuration;
+                    data.EffectDuration = defaultData.EffectDuration;
+
+                    needsSave = true;
+                }
             }
 
             ExcelSheet<Action>? sheet = Plugin.DataManager.GetExcelSheet<Action>();
@@ -170,7 +187,9 @@ namespace DelvUI.Interface.PartyCooldowns
                 Action? action = sheet?.GetRow(cooldown.ActionId);
                 if (action == null) { continue; }
 
-                if (action.Recast100ms > 0)
+                // get real cooldown from data
+                // keep hardcoded value for technical finish
+                if (action.Recast100ms > 0 && cooldown.ActionId != 16004)
                 {
                     cooldown.CooldownDuration = action.Recast100ms / 10;
                 }
@@ -224,7 +243,7 @@ namespace DelvUI.Interface.PartyCooldowns
                 ImGui.TableSetupColumn("Cooldown", ImGuiTableColumnFlags.WidthStretch, 10, 3);
                 ImGui.TableSetupColumn("Duration", ImGuiTableColumnFlags.WidthStretch, 10, 4);
                 ImGui.TableSetupColumn("Priority", ImGuiTableColumnFlags.WidthStretch, 22, 5);
-                ImGui.TableSetupColumn("Column", ImGuiTableColumnFlags.WidthStretch, 22, 6);
+                ImGui.TableSetupColumn("Section", ImGuiTableColumnFlags.WidthStretch, 22, 6);
 
                 ImGui.TableSetupScrollFreeze(0, 1);
                 ImGui.TableHeadersRow();
@@ -284,7 +303,7 @@ namespace DelvUI.Interface.PartyCooldowns
                         ImGui.PushItemWidth(160);
                         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 4);
 
-                        if (ImGui.DragInt($"##{cooldown.ActionId}_priority", ref cooldown.Priority, 1, 0, 100))
+                        if (ImGui.DragInt($"##{cooldown.ActionId}_priority", ref cooldown.Priority, 1, 0, 100, "%i", ImGuiSliderFlags.NoInput))
                         {
                             changed = true;
                             CooldownsDataChangedEvent?.Invoke(this);
@@ -299,7 +318,7 @@ namespace DelvUI.Interface.PartyCooldowns
                         ImGui.PushItemWidth(160);
                         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 4);
 
-                        if (ImGui.DragInt($"##{cooldown.ActionId}_column", ref cooldown.Column, 0.1f, 1, ColumnCount))
+                        if (ImGui.DragInt($"##{cooldown.ActionId}_column", ref cooldown.Column, 0.1f, 1, ColumnCount, "%i", ImGuiSliderFlags.NoInput))
                         {
                             changed = true;
                             CooldownsDataChangedEvent?.Invoke(this);
@@ -347,13 +366,14 @@ namespace DelvUI.Interface.PartyCooldowns
             [25868] = NewData(25868, JobIDs.SCH, 90, 120, 20, 80, 2), // expedient
             [16536] = NewData(16536, JobIDs.WHM, 80, 120, 20, 80, 2), // temperance
             [3569] = NewData(3569, JobIDs.WHM, 52, 90, 24, 50, 2), // asylum
+            [25862] = NewData(25862, JobIDs.WHM, 90, 180, 15, 80, 2), // liturgy of the bell
             [24298] = NewData(24298, JobIDs.SGE, 50, 30, 15, 80, 2), // kerachole
             [24310] = NewData(24310, JobIDs.SGE, 76, 120, 20, 80, 2), // holos
             [24311] = NewData(24311, JobIDs.SGE, 80, 120, 15, 80, 2), // panhaima
 
             // MELEE
             [7549] = NewData(7549, JobRoles.DPSMelee, 22, 90, 10, 100, 1), // feint
-            [2258] = NewData(2258, JobIDs.NIN, 18, 60, 15, 30, 3), // trick attack
+            [2248] = NewData(2248, JobIDs.NIN, 15, 120, 20, 30, 3), // mug
             [3557] = NewData(3557, JobIDs.DRG, 52, 120, 15, 30, 3), // battle litany
             [7396] = NewData(7396, JobIDs.MNK, 70, 120, 15, 90, 3), // brotherhood
             [65] = NewData(65, JobIDs.MNK, 42, 90, 15, 50, 2), // mantra
@@ -361,10 +381,11 @@ namespace DelvUI.Interface.PartyCooldowns
 
             // RANGED
             [118] = NewData(118, JobIDs.BRD, 50, 120, 15, 30, 3), // battle voice
-            [7405] = NewData(7405, JobIDs.BRD, 88, 90, 15, 70, 2), // troubadour
+            [7405] = NewData(7405, JobIDs.BRD, 62, 90, 15, 70, 2), // troubadour
             [7408] = NewData(7408, JobIDs.BRD, 66, 90, 15, 40, 2), // nature's minne
             [25785] = NewData(25785, JobIDs.BRD, 90, 110, 15, 30, 3), // radiant finale
-            [16012] = NewData(16012, JobIDs.DNC, 88, 90, 15, 70, 2), // shield samba
+            [16012] = NewData(16012, JobIDs.DNC, 56, 90, 15, 70, 2), // shield samba
+            [16004] = NewData(16004, JobIDs.DNC, 70, 120, 20, 30, 3), // technical step / finish
             [16889] = NewData(16889, JobIDs.MCH, 56, 90, 15, 70, 2), // tactician
 
             // CASTER

@@ -36,8 +36,12 @@ namespace DelvUI.Interface.GeneralElements
         public bool MouseoverAutomaticMode = true;
 
         [Checkbox("Hide DelvUI outside of combat", isMonitored = true, separator = true, help = "Show in Duty and Show on Weapon Drawn-options available once enabled.")]
-        [Order(20)]
+        [Order(17)]
         public bool HideOutsideOfCombat = false;
+
+        [Checkbox("Hide Player Frame even when not at full HP outside of combat.")]
+        [Order(18, collapseWith = nameof(HideOutsideOfCombat))]
+        public bool AlwaysHidePlayerFrameWhenDelvUIHidden = false;               
 
         [Checkbox("Show in duty" + "##HideOutsideCombat")]
         [Order(21, collapseWith = nameof(HideOutsideOfCombat))]
@@ -50,6 +54,10 @@ namespace DelvUI.Interface.GeneralElements
         [Checkbox("Hide DelvUI in Gold Saucer")]
         [Order(25)]
         public bool HideInGoldSaucer = false;
+
+        [Checkbox("Hide Player Frame at full HP")]
+        [Order(26)]
+        public bool HidePlayerFrameAtFullHP = false;
 
         [Checkbox("Hide only JobPack HUD outside of combat")]
         [Order(30)]
@@ -99,14 +107,6 @@ namespace DelvUI.Interface.GeneralElements
         [DynamicList("Hotbars Shown Only In Combat", "Hotbar 1", "Hotbar 2", "Hotbar 3", "Hotbar 4", "Hotbar 5", "Hotbar 6", "Hotbar 7", "Hotbar 8", "Hotbar 9", "Hotbar 10", isMonitored = true)]
         [Order(204, collapseWith = nameof(EnableCombatActionBars))]
         public List<string> CombatActionBars = new();
-
-        [Checkbox("Enable Game Windows Clipping", separator = true, isMonitored = true, help = "Disabling this will make it so DelvUI elements are not covered by in-game elements.\nMight help with performance issues and/or random crashes.")]
-        [Order(300)]
-        public bool EnableClipRects = true;
-
-        [Checkbox("Hide Elements Instead of Clipping", isMonitored = true, help = "This will make it so at least the DelvUI elements are completely hidden any in-game element is on top of them.\nIt will prevent DelvUI elements from covering in-game elements, but it won't look as good as clipping.\nMight help with performance issues and/or random crashes.")]
-        [Order(301, collapseWith = nameof(EnableClipRects))]
-        public bool HideInsteadOfClip = false;
 
         // saves original positions for all 4 layouts
         public Vector2[] CastBarOriginalPositions = new Vector2[] { Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero };

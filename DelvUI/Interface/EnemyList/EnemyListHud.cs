@@ -101,6 +101,7 @@ namespace DelvUI.Interface.EnemyList
             _castbarHud.StopPreview();
             _buffsListHud.StopPreview();
             _debuffsListHud.StopPreview();
+            Configs.HealthBar.MouseoverAreaConfig.Preview = false;
         }
 
         public void StopMouseover()
@@ -141,13 +142,15 @@ namespace DelvUI.Interface.EnemyList
                 int direction = Config.GrowthDirection == EnemyListGrowthDirection.Down ? 1 : -1;
                 float y = Config.Position.Y + i * direction * Configs.HealthBar.Size.Y + i * direction * Config.VerticalPadding;
                 Vector2 pos = new Vector2(Config.Position.X, y);
-                Rect background = new Rect(pos, Configs.HealthBar.Size, Configs.HealthBar.BackgroundColor);
 
                 PluginConfigColor fillColor = GetColor(character, currentHp, maxHp);
+                PluginConfigColor bgColor = Configs.HealthBar.BackgroundColor;
                 if (Configs.HealthBar.RangeConfig.Enabled)
                 {
                     fillColor = GetDistanceColor(character, fillColor);
+                    bgColor = GetDistanceColor(character, bgColor);
                 }
+                Rect background = new Rect(pos, Configs.HealthBar.Size, bgColor);
 
                 PluginConfigColor borderColor = GetBorderColor(character, enmityLevel);
                 Rect healthFill = BarUtilities.GetFillRect(pos, Configs.HealthBar.Size, Configs.HealthBar.FillDirection, fillColor, currentHp, maxHp);
@@ -169,22 +172,38 @@ namespace DelvUI.Interface.EnemyList
                 {
                     Vector2 healthMissingSize = Configs.HealthBar.Size - BarUtilities.GetFillDirectionOffset(healthFill.Size, Configs.HealthBar.FillDirection);
                     Vector2 healthMissingPos = Configs.HealthBar.FillDirection.IsInverted() ? pos : pos + BarUtilities.GetFillDirectionOffset(healthFill.Size, Configs.HealthBar.FillDirection);
-                    PluginConfigColor? color = Configs.HealthBar.Colors.HealthMissingColor;
+                    PluginConfigColor? color = Configs.HealthBar.RangeConfig.Enabled ? GetDistanceColor(character, Configs.HealthBar.Colors.HealthMissingColor) : Configs.HealthBar.Colors.HealthMissingColor;
                     bar.AddForegrounds(new Rect(healthMissingPos, healthMissingSize, color));
                 }
 
                 // highlight
-                bool isHovering = ImGui.IsMouseHoveringRect(origin + pos, origin + pos + Configs.HealthBar.Size);
-                if (isHovering && Configs.HealthBar.Colors.ShowHighlight)
+                var (areaStart, areaEnd) = Configs.HealthBar.MouseoverAreaConfig.GetArea(origin + pos, Configs.HealthBar.Size);
+                bool isHovering = ImGui.IsMouseHoveringRect(areaStart, areaEnd);
+                if (isHovering)
                 {
-                    Rect highlight = new Rect(pos, Configs.HealthBar.Size, Configs.HealthBar.Colors.HighlightColor);
-                    bar.AddForegrounds(highlight);
+                    if (Configs.HealthBar.Colors.ShowHighlight)
+                    {
+                        Rect highlight = new Rect(pos, Configs.HealthBar.Size, Configs.HealthBar.Colors.HighlightColor);
+                        bar.AddForegrounds(highlight);
+                    }
 
                     mouseoverTarget = character;
                     hovered = true;
                 }
 
                 AddDrawActions(bar.GetDrawActions(origin, Configs.HealthBar.StrataLevel));
+
+                // mouseover area
+                BarHud? mouseoverAreaBar = Configs.HealthBar.MouseoverAreaConfig.GetBar(
+                    pos,
+                    Configs.HealthBar.Size,
+                    Configs.HealthBar.ID + "_mouseoverArea"
+                );
+
+                if (mouseoverAreaBar != null)
+                {
+                    AddDrawActions(mouseoverAreaBar.GetDrawActions(origin, StrataLevel.HIGHEST));
+                }
 
                 // enmity icon
                 if (_iconsTexture != null && Configs.EnmityIcon.Enabled)
@@ -230,6 +249,7 @@ namespace DelvUI.Interface.EnemyList
                 AddDrawAction(Configs.Buffs.StrataLevel, () =>
                 {
                     _buffsListHud.Actor = character;
+                    _buffsListHud.PrepareForDraw(buffsPos);
                     _buffsListHud.Draw(buffsPos);
                 });
 
@@ -237,6 +257,7 @@ namespace DelvUI.Interface.EnemyList
                 AddDrawAction(Configs.Debuffs.StrataLevel, () =>
                 {
                     _debuffsListHud.Actor = character;
+                    _debuffsListHud.PrepareForDraw(debuffsPos);
                     _debuffsListHud.Draw(debuffsPos);
                 });
 
@@ -245,6 +266,7 @@ namespace DelvUI.Interface.EnemyList
                 AddDrawAction(Configs.CastBar.StrataLevel, () =>
                 {
                     _castbarHud.Actor = character;
+                    _castbarHud.PrepareForDraw(castbarPos);
                     _castbarHud.Draw(castbarPos);
                 });
             }

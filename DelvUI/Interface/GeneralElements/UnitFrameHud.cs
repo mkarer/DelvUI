@@ -12,10 +12,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Dalamud.Game.ClientState.Objects.Enums;
 
 namespace DelvUI.Interface.GeneralElements
 {
-    public unsafe class UnitFrameHud : DraggableHudElement, IHudElementWithActor, IHudElementWithMouseOver
+    public unsafe class UnitFrameHud : DraggableHudElement, IHudElementWithActor, IHudElementWithMouseOver, IHudElementWithPreview
     {
         public UnitFrameConfig Config => (UnitFrameConfig)_config;
 
@@ -50,6 +51,11 @@ namespace DelvUI.Interface.GeneralElements
             return (new List<Vector2>() { Config.Position }, new List<Vector2>() { Config.Size });
         }
 
+        public void StopPreview()
+        {
+            Config.MouseoverAreaConfig.Preview = false;
+        }
+
         public void StopMouseover()
         {
             if (_wasHovering)
@@ -80,7 +86,8 @@ namespace DelvUI.Interface.GeneralElements
 
             // Check if mouse is hovering over the box properly
             var startPos = Utils.GetAnchoredPosition(origin + Config.Position, Config.Size, Config.Anchor);
-            if (ImGui.IsMouseHoveringRect(startPos, startPos + Config.Size) && !DraggingEnabled)
+            var (areaStart, areaEnd) = Config.MouseoverAreaConfig.GetArea(startPos, Config.Size);
+            if (ImGui.IsMouseHoveringRect(areaStart, areaEnd) && !DraggingEnabled)
             {
                 InputsHelper.Instance.SetTarget(Actor);
                 _wasHovering = true;
@@ -119,6 +126,12 @@ namespace DelvUI.Interface.GeneralElements
 
             PluginConfigColor fillColor = GetColor(character, currentHp, maxHp);
             Rect background = new Rect(Config.Position, Config.Size, BackgroundColor(character));
+            if (Config.RangeConfig.Enabled || Config.EnemyRangeConfig.Enabled)
+            {
+                fillColor = GetDistanceColor(character, fillColor);
+                background.Color = GetDistanceColor(character, background.Color);
+            }
+
             Rect healthFill = BarUtilities.GetFillRect(Config.Position, Config.Size, Config.FillDirection, fillColor, currentHp, maxHp);
 
             BarHud bar = new BarHud(Config, character);
@@ -133,7 +146,17 @@ namespace DelvUI.Interface.GeneralElements
                     ? Config.Position
                     : Config.Position + BarUtilities.GetFillDirectionOffset(healthFill.Size, Config.FillDirection);
 
-                PluginConfigColor missingHealthColor = Config.HealthMissingColor;
+                PluginConfigColor missingHealthColor = Config.UseJobColorAsMissingHealthColor && character is BattleChara
+                    ? GlobalColors.Instance.SafeColorForJobId(character!.ClassJob.Id)
+                    : Config.UseRoleColorAsMissingHealthColor && character is BattleChara
+                        ? GlobalColors.Instance.SafeRoleColorForJobId(character!.ClassJob.Id)
+                        : Config.HealthMissingColor;
+
+                if (Config.UseDeathIndicatorBackgroundColor && character is BattleChara { CurrentHp: <= 0 })
+                {
+                    missingHealthColor = Config.DeathIndicatorBackgroundColor;
+                }
+
                 if (Config.UseCustomInvulnerabilityColor && character is BattleChara battleChara)
                 {
                     Status? tankInvuln = Utils.GetTankInvulnerabilityID(battleChara);
@@ -141,6 +164,11 @@ namespace DelvUI.Interface.GeneralElements
                     {
                         missingHealthColor = Config.CustomInvulnerabilityColor;
                     }
+                }
+
+                if (Config.RangeConfig.Enabled || Config.EnemyRangeConfig.Enabled)
+                {
+                    missingHealthColor = GetDistanceColor(character, missingHealthColor);
                 }
 
                 bar.AddForegrounds(new Rect(healthMissingPos, healthMissingSize, missingHealthColor));
@@ -166,6 +194,19 @@ namespace DelvUI.Interface.GeneralElements
             }
 
             AddDrawActions(bar.GetDrawActions(pos, Config.StrataLevel));
+
+            // mouseover area
+            BarHud? mouseoverAreaBar = Config.MouseoverAreaConfig.GetBar(
+                Config.Position,
+                Config.Size,
+                Config.ID + "_mouseoverArea",
+                Config.Anchor
+            );
+
+            if (mouseoverAreaBar != null)
+            {
+                AddDrawActions(mouseoverAreaBar.GetDrawActions(pos, StrataLevel.HIGHEST));
+            }
 
             // role/job icon
             if (Config.RoleIconConfig.Enabled && character is PlayerCharacter)
@@ -248,11 +289,34 @@ namespace DelvUI.Interface.GeneralElements
             else if (Config.ColorByHealth.Enabled && character != null)
             {
                 var scale = (float)currentHp / Math.Max(1, maxHp);
+                if (Config.ColorByHealth.UseJobColorAsMaxHealth)
+                {
+                    return Utils.GetColorByScale(scale, Config.ColorByHealth.LowHealthColorThreshold / 100f, Config.ColorByHealth.FullHealthColorThreshold / 100f, Config.ColorByHealth.LowHealthColor, Config.ColorByHealth.FullHealthColor, Utils.ColorForActor(character), Config.ColorByHealth.UseMaxHealthColor, Config.ColorByHealth.BlendMode);
+                }
+                else if (Config.ColorByHealth.UseRoleColorAsMaxHealth)
+                {
+                    return Utils.GetColorByScale(scale, Config.ColorByHealth.LowHealthColorThreshold / 100f, Config.ColorByHealth.FullHealthColorThreshold / 100f, Config.ColorByHealth.LowHealthColor, Config.ColorByHealth.FullHealthColor, character is PlayerCharacter ? GlobalColors.Instance.SafeRoleColorForJobId(character.ClassJob.Id) : Utils.ColorForActor(character), Config.ColorByHealth.UseMaxHealthColor, Config.ColorByHealth.BlendMode);
+                }
                 return Utils.GetColorByScale(scale, Config.ColorByHealth);
             }
-
             return Config.FillColor;
         }
+
+        private PluginConfigColor GetDistanceColor(Character? character, PluginConfigColor color)
+        {
+            byte distance = character != null ? character.YalmDistanceX : byte.MaxValue;
+            float currentAlpha = color.Vector.W * 100f;
+            float alpha = Config.RangeConfig.AlphaForDistance(distance, currentAlpha) / 100f;
+
+            if (character is BattleNpc { BattleNpcKind: BattleNpcSubKind.Enemy } && Config.EnemyRangeConfig.Enabled)
+            {
+                alpha = Config.EnemyRangeConfig.AlphaForDistance(distance, currentAlpha) / 100f;
+            }
+
+            return new PluginConfigColor(color.Vector.WithNewAlpha(alpha));
+        }
+
+
 
         private void DrawFriendlyNPC(Vector2 pos, GameObject? actor)
         {
@@ -295,6 +359,10 @@ namespace DelvUI.Interface.GeneralElements
                 if (Config.UseJobColorAsBackgroundColor)
                 {
                     return GlobalColors.Instance.SafeColorForJobId(chara.ClassJob.Id);
+                }
+                else if (Config.UseRoleColorAsBackgroundColor)
+                {
+                    return GlobalColors.Instance.SafeRoleColorForJobId(chara.ClassJob.Id);
                 }
                 else if (Config.UseDeathIndicatorBackgroundColor && chara.CurrentHp <= 0)
                 {

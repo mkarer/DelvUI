@@ -71,18 +71,6 @@ namespace DelvUI.Interface.Jobs
                 sizes.Add(Config.FountainBar.Position);
             }
 
-            if (Config.WindmillBar.Enabled)
-            {
-                positions.Add(Config.Position + Config.WindmillBar.Position);
-                sizes.Add(Config.WindmillBar.Position);
-            }
-
-            if (Config.ShowerBar.Enabled)
-            {
-                positions.Add(Config.Position + Config.ShowerBar.Position);
-                sizes.Add(Config.ShowerBar.Position);
-            }
-
             return (positions, sizes);
         }
 
@@ -125,14 +113,12 @@ namespace DelvUI.Interface.Jobs
             {
                 if (Config.CascadeBar.Enabled) { DrawProcBar(pos, player, Config.CascadeBar, 2693); }
                 if (Config.FountainBar.Enabled) { DrawProcBar(pos, player, Config.FountainBar, 2694); }
-                if (Config.WindmillBar.Enabled) { DrawProcBar(pos, player, Config.WindmillBar, 2693); }
-                if (Config.ShowerBar.Enabled) { DrawProcBar(pos, player, Config.ShowerBar, 2694); }
             }
         }
 
         private void DrawProcBar(Vector2 origin, PlayerCharacter player, DancerProcBarConfig config, uint statusId)
         {
-            BarHud? bar = BarUtilities.GetProcBar(config, player, statusId, 20f, !config.IgnoreBuffDuration);
+            BarHud? bar = BarUtilities.GetProcBar(config, player, statusId, 30f, !config.IgnoreBuffDuration);
             if (bar != null)
             {
                 AddDrawActions(bar.GetDrawActions(origin, config.StrataLevel));
@@ -230,17 +216,16 @@ namespace DelvUI.Interface.Jobs
         private void DrawFeathersBar(Vector2 origin, PlayerCharacter player)
         {
             DNCGauge gauge = Plugin.JobGauges.Get<DNCGauge>();
-            if (Config.FeatherGauge.HideWhenInactive && gauge.Feathers is 0)
+            bool hasFlourishingBuff = player.StatusList.FirstOrDefault(o => o.StatusId is 1820 or 2021) != null;
+            bool[]? glows = null;
+
+            if (Config.FeatherGauge.HideWhenInactive && gauge.Feathers is 0 && !hasFlourishingBuff)
             {
                 return;
             }
 
-            bool hasFlourishingBuff = false;
-            bool[]? glows = null;
-
             if (Config.FeatherGauge.GlowConfig.Enabled)
             {
-                hasFlourishingBuff = player.StatusList.FirstOrDefault(o => o.StatusId is 1820 or 2021) != null;
                 glows = new bool[] { hasFlourishingBuff, hasFlourishingBuff, hasFlourishingBuff, hasFlourishingBuff };
             }
 
@@ -309,8 +294,6 @@ namespace DelvUI.Interface.Jobs
 
             config.CascadeBar.Label.FontID = FontsConfig.DefaultMediumFontKey;
             config.FountainBar.Label.FontID = FontsConfig.DefaultMediumFontKey;
-            config.WindmillBar.Label.FontID = FontsConfig.DefaultMediumFontKey;
-            config.ShowerBar.Label.FontID = FontsConfig.DefaultMediumFontKey;
 
             return config;
         }
@@ -351,32 +334,18 @@ namespace DelvUI.Interface.Jobs
             new PluginConfigColor(new Vector4(175f / 255f, 229f / 255f, 29f / 255f, 100f / 100f))
         );
 
-        [NestedConfig("Flourishing Cascade Bar", 60)]
+        [NestedConfig("Flourishing Symmetry Bar", 60)]
         public DancerProcBarConfig CascadeBar = new DancerProcBarConfig(
             new(-96, -83),
             new(62, 10),
             new(new Vector4(0f / 255f, 255f / 255f, 0f / 255f, 100f / 100f))
         );
 
-        [NestedConfig("Flourishing Fountain Bar", 65)]
+        [NestedConfig("Flourishing Flow Bar", 65)]
         public DancerProcBarConfig FountainBar = new DancerProcBarConfig(
             new(-32, -83),
             new(62, 10),
             new(new Vector4(255f / 255f, 215f / 255f, 0f / 255f, 100f / 100f))
-        );
-
-        [NestedConfig("Flourishing Windmill Bar", 70)]
-        public DancerProcBarConfig WindmillBar = new DancerProcBarConfig(
-            new(32, -83),
-            new(62, 10),
-            new(new Vector4(0f / 255f, 215f / 255f, 215f / 255f, 100f / 100f))
-        );
-
-        [NestedConfig("Flourishing Shower Bar", 75)]
-        public DancerProcBarConfig ShowerBar = new DancerProcBarConfig(
-            new(96, -83),
-            new(62, 10),
-            new(new Vector4(255f / 255f, 100f / 255f, 0f / 255f, 100f / 100f))
         );
 
         [NestedConfig("Steps Bar", 80)]

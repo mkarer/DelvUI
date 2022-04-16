@@ -1,12 +1,13 @@
 ﻿using DelvUI.Config;
 using DelvUI.Config.Attributes;
 using DelvUI.Enums;
+using DelvUI.Helpers;
 using DelvUI.Interface.Bars;
 using System.Numerics;
 
 namespace DelvUI.Interface.GeneralElements
 {
-    [DisableParentSettings("HideWhenInactive", "HideHealthIfPossible")]
+    [DisableParentSettings("HideWhenInactive", "HideHealthIfPossible", "RangeConfig", "EnemyRangeConfig")]
     [Section("Unit Frames")]
     [SubSection("Player", 0)]
     public class PlayerUnitFrameConfig : UnitFrameConfig
@@ -159,9 +160,21 @@ namespace DelvUI.Interface.GeneralElements
         [Order(50)]
         public bool UseJobColorAsBackgroundColor = false;
 
+        [Checkbox("Role Color As Background Color")]
+        [Order(51)]
+        public bool UseRoleColorAsBackgroundColor = false;
+
         [Checkbox("Missing Health Color")]
         [Order(55)]
         public bool UseMissingHealthBar = false;
+
+        [Checkbox("Job Color As Missing Health Color")]
+        [Order(56, collapseWith = nameof(UseMissingHealthBar))]
+        public bool UseJobColorAsMissingHealthColor = false;
+
+        [Checkbox("Role Color As Missing Health Color")]
+        [Order(57, collapseWith = nameof(UseMissingHealthBar))]
+        public bool UseRoleColorAsMissingHealthColor = false;
 
         [ColorEdit4("Color" + "##MissingHealth")]
         [Order(60, collapseWith = nameof(UseMissingHealthBar))]
@@ -222,6 +235,15 @@ namespace DelvUI.Interface.GeneralElements
         [NestedConfig("Shields", 140)]
         public ShieldConfig ShieldConfig = new ShieldConfig();
 
+        [NestedConfig("Change Friendly Alpha Based on Range", 145)]
+        public UnitFramesRangeConfig RangeConfig = new();
+
+        [NestedConfig("Change Enemy Alpha Based on Range", 146)]
+        public UnitFramesRangeConfig EnemyRangeConfig = new();
+
+        [NestedConfig("Custom Mouseover Area", 150)]
+        public MouseoverAreaConfig MouseoverAreaConfig = new MouseoverAreaConfig();
+
         public UnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig)
             : base(position, size, new PluginConfigColor(new(40f / 255f, 40f / 255f, 40f / 255f, 100f / 100f)))
         {
@@ -233,6 +255,7 @@ namespace DelvUI.Interface.GeneralElements
             BackgroundColor = new PluginConfigColor(new(0f / 255f, 0f / 255f, 0f / 255f, 100f / 100f));
             RoleIconConfig.Enabled = false;
             ColorByHealth.Enabled = false;
+            MouseoverAreaConfig.Enabled = false;
         }
 
         public UnitFrameConfig() : base(Vector2.Zero, Vector2.Zero, new(Vector4.Zero)) { } // don't remove
@@ -264,5 +287,99 @@ namespace DelvUI.Interface.GeneralElements
         [DragFloat("Velocity", min = 1f, max = 100f)]
         [Order(5)]
         public float Velocity = 25f;
+    }
+
+    [Exportable(false)]
+    public class MouseoverAreaConfig : PluginConfigObject
+    {
+        [Checkbox("Preview")]
+        [Order(5)]
+        public bool Preview = false;
+
+        [DragInt2("Top Left Offset", min = -500, max = 500)]
+        [Order(10)]
+        public Vector2 TopLeftOffset = Vector2.Zero;
+
+        [DragInt2("Bottom Right Offset", min = -500, max = 500)]
+        [Order(11)]
+        public Vector2 BottomRightOffset = Vector2.Zero;
+
+        public MouseoverAreaConfig()
+        {
+            Enabled = false;
+        }
+
+        public (Vector2, Vector2) GetArea(Vector2 pos, Vector2 size)
+        {
+            if (!Enabled) { return (pos, pos + size); }
+
+            Vector2 start = pos + TopLeftOffset;
+            Vector2 end = pos + size + BottomRightOffset;
+
+            return (start, end);
+        }
+
+        public BarHud? GetBar(Vector2 pos, Vector2 size, string id, DrawAnchor anchor = DrawAnchor.TopLeft)
+        {
+            if (!Enabled || !Preview) { return null; }
+
+            BarHud bar = new BarHud(
+                id,
+                true,
+                new(Vector4.One),
+                2
+            );
+
+            var barPos = Utils.GetAnchoredPosition(Vector2.Zero, size, anchor);
+            var (start, end) = GetArea(barPos + pos, size);
+            Rect background = new Rect(start, end - start, new(new(1, 1, 1, 0.5f)));
+            bar.SetBackground(background);
+
+            return bar;
+        }
+    }
+
+    [Exportable(false)]
+    public class UnitFramesRangeConfig : PluginConfigObject
+    {
+        [DragInt("Range (yalms)", min = 1, max = 500)]
+        [Order(5)]
+        public int Range = 30;
+
+        [DragFloat("Alpha", min = 1, max = 100)]
+        [Order(10)]
+        public float Alpha = 24;
+
+        [Checkbox("Use Additional Range Check")]
+        [Order(15)]
+        public bool UseAdditionalRangeCheck = false;
+
+        [DragInt("Additional Range (yalms)", min = 1, max = 500)]
+        [Order(20, collapseWith = nameof(UseAdditionalRangeCheck))]
+        public int AdditionalRange = 15;
+
+        [DragFloat("Additional Alpha", min = 1, max = 100)]
+        [Order(25, collapseWith = nameof(UseAdditionalRangeCheck))]
+        public float AdditionalAlpha = 60;
+
+        public float AlphaForDistance(int distance, float alpha = 100f)
+        {
+            if (!Enabled)
+            {
+                return 100f;
+            }
+
+            if (!UseAdditionalRangeCheck)
+            {
+                return distance > Range ? Alpha : alpha;
+            }
+
+            if (Range > AdditionalRange)
+            {
+                return distance > Range ? Alpha : (distance > AdditionalRange ? AdditionalAlpha : alpha);
+            }
+
+            return distance > AdditionalRange ? AdditionalAlpha : (distance > Range ? Alpha : alpha);
+        }
     }
 }

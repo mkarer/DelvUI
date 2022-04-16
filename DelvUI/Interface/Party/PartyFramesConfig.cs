@@ -73,6 +73,8 @@ namespace DelvUI.Interface.Party
         public new static PartyFramesHealthBarsConfig DefaultConfig()
         {
             var config = new PartyFramesHealthBarsConfig(Vector2.Zero, new(180, 80), new PluginConfigColor(Vector4.Zero));
+            config.MouseoverAreaConfig.Enabled = false;
+
             return config;
         }
 
@@ -100,6 +102,9 @@ namespace DelvUI.Interface.Party
 
         [NestedConfig("Use Smooth Transitions", 70)]
         public SmoothHealthConfig SmoothHealthConfig = new SmoothHealthConfig();
+
+        [NestedConfig("Custom Mouseover Area", 75)]
+        public MouseoverAreaConfig MouseoverAreaConfig = new MouseoverAreaConfig();
 
         public PartyFramesHealthBarsConfig(Vector2 position, Vector2 size, PluginConfigColor fillColor, BarDirection fillDirection = BarDirection.Right)
             : base(position, size, fillColor, fillDirection)
@@ -188,16 +193,34 @@ namespace DelvUI.Interface.Party
         [ColorEdit4("Highlight Color")]
         [Order(45, collapseWith = nameof(ShowHighlight))]
         public PluginConfigColor HighlightColor = new PluginConfigColor(new Vector4(255f / 255f, 255f / 255f, 255f / 255f, 5f / 100f));
+
+
         [Checkbox("Missing Health Color", spacing = true)]
         [Order(46)]
         public bool UseMissingHealthBar = false;
 
-        [ColorEdit4("Color" + "##MissingHealth")]
+        [Checkbox("Job Color As Missing Health Color")]
         [Order(47, collapseWith = nameof(UseMissingHealthBar))]
+        public bool UseJobColorAsMissingHealthColor = false;
+
+        [Checkbox("Role Color As Missing Health Color")]
+        [Order(48, collapseWith = nameof(UseMissingHealthBar))]
+        public bool UseRoleColorAsMissingHealthColor = false;
+
+        [ColorEdit4("Color" + "##MissingHealth")]
+        [Order(49, collapseWith = nameof(UseMissingHealthBar))]
         public PluginConfigColor HealthMissingColor = new(new Vector4(255f / 255f, 0f / 255f, 0f / 255f, 100f / 100f));
 
-        [Checkbox("Show Enmity Border Colors", spacing = true)]
+        [Checkbox("Job Color As Background Color")]
         [Order(50)]
+        public bool UseJobColorAsBackgroundColor = false;
+
+        [Checkbox("Role Color As Background Color")]
+        [Order(51)]
+        public bool UseRoleColorAsBackgroundColor = false;
+
+        [Checkbox("Show Enmity Border Colors", spacing = true)]
+        [Order(54)]
         public bool ShowEnmityBorderColors = true;
 
         [ColorEdit4("Enmity Leader Color")]

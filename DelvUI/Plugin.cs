@@ -52,7 +52,6 @@ namespace DelvUI
         public static string Version { get; private set; } = "";
 
         private HudManager _hudManager = null!;
-        private SystemMenuHook _menuHook = null!;
 
         public delegate void JobChangedEventHandler(uint jobId);
         public static event JobChangedEventHandler? JobChangedEvent;
@@ -98,7 +97,7 @@ namespace DelvUI
                 AssemblyLocation = Assembly.GetExecutingAssembly().Location;
             }
 
-            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.6.3.0";
+            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.1.0.0";
 
             FontsManager.Initialize(AssemblyLocation);
             LoadBanner();
@@ -110,7 +109,6 @@ namespace DelvUI
 
             FontsManager.Instance.LoadConfig();
 
-            _menuHook = new SystemMenuHook(PluginInterface);
 
             ChatHelper.Initialize();
             ClipRectsHelper.Initialize();
@@ -191,6 +189,11 @@ namespace DelvUI
                 {
                     case "toggle":
                         ConfigurationManager.Instance.ShowHUD = !ConfigurationManager.Instance.ShowHUD;
+                        break;
+
+                    case "toggledefaulthud":
+                        ConfigurationManager.Instance.GetConfigObject<HUDOptionsConfig>().HideDefaultJobGauges =
+                            !ConfigurationManager.Instance.GetConfigObject<HUDOptionsConfig>().HideDefaultJobGauges;
                         break;
 
                     case "show":
@@ -305,11 +308,10 @@ namespace DelvUI
                 return;
             }
 
-            _menuHook.Dispose();
-            _hudManager.Dispose();
+            _hudManager?.Dispose();
 
-            ConfigurationManager.Instance.SaveConfigurations(true);
-            ConfigurationManager.Instance.CloseConfigWindow();
+            ConfigurationManager.Instance?.SaveConfigurations(true);
+            ConfigurationManager.Instance?.CloseConfigWindow();
 
             CommandManager.RemoveHandler("/delvui");
 
@@ -318,23 +320,23 @@ namespace DelvUI
             UiBuilder.OpenConfigUi -= OpenConfigUi;
             UiBuilder.RebuildFonts();
 
-            ChatHelper.Instance.Dispose();
-            ClipRectsHelper.Instance.Dispose();
-            ExperienceHelper.Instance.Dispose();
-            FontsManager.Instance.Dispose();
-            GlobalColors.Instance.Dispose();
-            LimitBreakHelper.Instance.Dispose();
-            InputsHelper.Instance.Dispose();
-            PartyCooldownsManager.Instance.Dispose();
-            PartyManager.Instance.Dispose();
-            PullTimerHelper.Instance.Dispose();
-            ProfilesManager.Instance.Dispose();
-            SpellHelper.Instance.Dispose();
-            TexturesCache.Instance.Dispose();
-            TooltipsHelper.Instance.Dispose();
+            ChatHelper.Instance?.Dispose();
+            ClipRectsHelper.Instance?.Dispose();
+            ExperienceHelper.Instance?.Dispose();
+            FontsManager.Instance?.Dispose();
+            GlobalColors.Instance?.Dispose();
+            LimitBreakHelper.Instance?.Dispose();
+            InputsHelper.Instance?.Dispose();
+            PartyCooldownsManager.Instance?.Dispose();
+            PartyManager.Instance?.Dispose();
+            PullTimerHelper.Instance?.Dispose();
+            ProfilesManager.Instance?.Dispose();
+            SpellHelper.Instance?.Dispose();
+            TexturesCache.Instance?.Dispose();
+            TooltipsHelper.Instance?.Dispose();
 
             // This needs to remain last to avoid race conditions
-            ConfigurationManager.Instance.Dispose();
+            ConfigurationManager.Instance?.Dispose();
         }
     }
 }

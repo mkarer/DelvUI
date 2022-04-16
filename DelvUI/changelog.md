@@ -1,8 +1,136 @@
+# 1.1.0.0
+Features:
+- Updated for patch 6.1 support.
+- DelvUI option was removed from the in-game system menu:
+    + This feature used to conflict with Dalamud's system menu options which was not ideal.
+    + We ran into some issues with this feature and were not really comfortable with the way it was implemented so we decided to remove it.
+    + You can use "/delvui" to access the config window. We might add a shorter alias for this command in the future for convenience.
+
+Fixes:
+- Fixed party sorting for Trust and Command Missisons parties.
+- Fixed party leader icon for Trust and Command Missisons parties.
+
+# 1.0.1.3
+Fixes:
+- Fixed the duration of Dancer Flourishing buffs.
+- Fixed Dancer "Fan Dance III" proc not showing on the Feather Gauge if "Hide When Inactive" was selected and no other feathers were available.
+
+# 1.0.1.2
+Features:
+- Added Partial Fill Color options for Sages' "Addersgall" bar and White Mages' "Lily" bar.
+- Added options for Glow to White Mages' "Blood Lily" bar when filled.
+- Added White Mages' "Liturgy of the Bell" to the Party Cooldowns tracker.
+- Added a sub-option to the Experience Bars' "Hide When Inactive" to hide the experience bar in downsynced content when on a max level job.
+- Added new texttags for Health and Mana percentages to also show for whole numbers (ie 78.0% instead of 78%).
+
+Fixes:
+- Reaper "Death Gauge" bar now has Fill Direction options.
+
+# 1.0.1.1
+Features:
+- Added a sub-option to keep hiding Player Unitframe outside of combat when not full health if "Hide DelvUI outside of combat" is enabled.
+- Added a separate option to always hide Player Unitframe when at full health.
+
+Fixes:
+- Fixed status effects names and descriptions on P4S (English only for now).
+
+# 1.0.1.0
+Features:
+- Added Rounding Mode, an option to choose in what way labels are handled (truncate, floor, ceil, round).
+- Added a command to toggle the default job gauges `/delvui toggledefaulthud`.
+
+Fixes:
+- Fixed cast names on P4S (English only for now).
+- Fixed "My Effects First" for Buffs and Debuffs that was broken in the latest patch.
+- Fixed weird crashes when the plugin is unloading.
+- Fixed crash when manually setting a Party Cooldown section to an invalid value.
+
+# 1.0.0.3
+Features:
+- Added "Use Job Color" and "Use Role Color" options when using "Use Max Health Color".
+- Added option to sort permanent buffs/debuffs first.
+
+Fixes:
+- Fixed Machinist's Automaton Queen/Rook Autoturret bar not showing progress. 
+- Removed duplicate proc bars for Dancer and renamed them as appropriate.
+
+# 1.0.0.2
+Features:
+- Added "Right" and "Left" growth directions for Party Cooldowns:
+    + "Columns" renamed to "Sections". When using a vertical growth direction the Section of a cooldown would be the column. On horizontal directions, it would be the row.
+    + Due to adjustments in the positioning logic, the list might be silightly moved when updating.
+- Added an option to show mana up to 10k on Dark Knight's mana bar. Note that this will break thresholds.
+- Separated the Automaton Queen/Rook Autoturret duration tracker from the Battery Gauge into its own bar.
+
+Fixes:
+- Fixed "Use Job Color" and "Use Role Color" for status effects duration and stacks labels.
+- Fixed Job Huds strata level not working properly.
+- Fixed status effects durations when they are 1 hour or longer.
+- Fixed border thickness not working on some chunked bars.
+
+# 1.0.0.1
+Fixes:
+- Fixed Status Effect Lists interactions not working with Window Clipping disabled or in Performance Mode.
+- Fixed GCD Indicator and MP Ticker strata levels not working properly.
+- Fixed strata levels not saving properly for some elements.
+- Fixed Death Indicator Color when using Missing Health Color for unit and party frames.
+- Fixed Player Castbar freezing when interacting with some objects.
+- Fixed targets in the Enemy List not being targetable when "Highlight When Hovering With Cursor" was disabled.
+- Fixed "Change Alpha Based on Range" for Missing Health Color and Background Color on Enemy List frames.
+
+# 1.0.0.0
+Features:
+- Several changes made to Window Clipping:
+    + Moved from Misc > HUD Options to its own tab under Misc.
+    + Will be disabled by default since it is known to cause random crashes to a small portion of users.
+    + It can still be manually enabled through the config window.
+    + A new "Performance" mode was added which has the clipping functionallity reduced in favor of FPS.
+    + Details on all the modes can be found in Misc > Window Clipping.
+- Added "Change Alpha Based on Range" options for Target, Target of Target and Focus Frames separated into Friendly and Enemy settings.
+
+Fixes:
+- Fixed "Change Alpha Based on Range" for Missing Health Color and Background Color on party frames.
+- Updated the pre-populated white list for the Custom Effects. Note that this will not update existing profiles.
+- Fixed Bard's Troubadour and Dancer's Shield Samba not being tracked correctly in some situations.
+- Fixed Dancer's Technical Finish not being tracked properly.
+
+# 0.6.3.4
+- Fixed window clipping not working.
+
+# 0.6.3.3
+Features:
+- Added element background colors for Black Mage's custom mana bar.
+- Added element colors for Black Mage's Paradox bar.
+
+Fixes:
+- GCD Indicator now works for melee classes under level 30.
+- Fixed Black Mage's mana bar "Use Element Color" setting not disabling properly.
+
+# 0.6.3.2
+- Fixed crashes caused by setting Missing Health Color to use Job or Role Colors.
+
+# 0.6.3.1
+Features:
+- Added option to show Total Casttime on top of Current Casttime for Castbars.
+- Added option to use Job and Role Color as Background Color in Party Frames.
+- Added option to use Job and Role Color as Missing Health Color in Party Frames.
+- Added option to use Role Color as Background Color in Unit Frames.
+- Added option to use Job and Role Color as Missing Health Color in Unit Frames.
+
+Fixes:
+- Fixed positioning of the label on Dark Knight's Delirium Bar.
+- Fixed positioning of the label on Warrior's Inner Release Bar.
+- Spearfishing window will now be drawn on top of DelvUI.
+- Fixed Party Frames not updating properly when resizing the health bars.
+- Fixed Party Frames Tank Invulnerability Background Color when using Missing Health Color.
+
 # 0.6.3.0
 Features:
 - Added setting to Status Effects Lists to disable mouse interactions.
 - Added target border thickness setting to the Enemy List.
 - Added Bard's Radiant Finale as a trackable party cooldown.
+- Added Dancer's Technical Finish as a trackable party cooldown.
+- Added a Custom Mouseover Area setting too all types of unit frames.
 
 Fixes:
 - Fixed Party Frames border color not working.

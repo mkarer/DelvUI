@@ -8,7 +8,9 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Numerics;
+using System.Text;
 
 namespace DelvUI.Interface.GeneralElements
 {
@@ -108,7 +110,7 @@ namespace DelvUI.Interface.GeneralElements
             // cast name
             bool isNameLeftAnchored = Config.CastNameLabel.TextAnchor is DrawAnchor.Left or DrawAnchor.TopLeft or DrawAnchor.BottomLeft;
             Vector2 namePos = Config.ShowIcon && isNameLeftAnchored ? startPos + new Vector2(iconSize.X, 0) : startPos;
-            string? castName = LastUsedCast?.ActionText.CheckForUpperCase();
+            string? castName = MappedCastName(LastUsedCast?.CastId) ?? LastUsedCast?.ActionText.CheckForUpperCase();
             Config.CastNameLabel.SetText(Config.Preview ? "Cast Name" : castName ?? "");
 
             AddDrawAction(Config.CastNameLabel.StrataLevel, () =>
@@ -120,7 +122,17 @@ namespace DelvUI.Interface.GeneralElements
             bool isTimeLeftAnchored = Config.CastTimeLabel.TextAnchor is DrawAnchor.Left or DrawAnchor.TopLeft or DrawAnchor.BottomLeft;
             Vector2 timePos = Config.ShowIcon && isTimeLeftAnchored ? startPos + new Vector2(iconSize.X, 0) : startPos;
             float value = Config.Preview ? 0.5f : totalCastTime - currentCastTime;
-            Config.CastTimeLabel.SetValue(value);
+
+            if (Config.ShowMaxCastTime)
+            {
+                string format = "0".Repeat(Config.CastTimeLabel.NumberFormat);
+                Config.CastTimeLabel.SetText(value.ToString($"####0.{format}", CultureInfo.InvariantCulture)
+                    + " / " + totalCastTime.ToString($"####0.{format}", CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                Config.CastTimeLabel.SetValue(value);
+            }
 
             AddDrawAction(Config.CastTimeLabel.StrataLevel, () =>
             {
@@ -161,6 +173,19 @@ namespace DelvUI.Interface.GeneralElements
         }
 
         public virtual PluginConfigColor GetColor() => Config.FillColor;
+
+        private string? MappedCastName(uint? castId)
+        {
+            if (!castId.HasValue) { return null; }
+
+            return castId switch
+            {
+                27174 => "Nearsight",
+                27175 => "Farsight",
+                28280 => "Demigod Double",
+                _ => null
+            };
+        }
     }
 
     public class PlayerCastbarHud : CastbarHud
